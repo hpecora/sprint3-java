@@ -1,0 +1,111 @@
+:root {
+    --bg: #0d0d0d;
+    --panel: #1c1c1c;
+    --stroke: #333;
+    --text: #e0e0e0;
+    --brand: #16a34a;
+    --brand-2: #22c55e;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Helvetica Neue, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+a {
+    color: #22c55e;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card {
+    background: var(--panel);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    width: 400px;
+}
+
+.field {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.field label {
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.input {
+    padding: 10px;
+    border: 1px solid var(--stroke);
+    border-radius: 6px;
+    background: #2a2a2a;
+    color: var(--text);
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--brand);
+}
+
+.chips {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.chip {
+    background: #2a2a2a;
+    border: 1px solid var(--stroke);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.chip:hover {
+    background: var(--brand);
+    color: #fff;
+    border-color: var(--brand);
+}
+
+.actions {
+    margin-top: 20px;
+}
+
+.btn {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    background: var(--brand);
+    color: white;
+    padding: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: var(--brand-2);
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Mapa de Motos · MotoTracker</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <style>
+        :root{--bg:#0f1315;--card:#0b0f10;--line:#1d262b;--text:#eaeef0;--muted:#a5adbb;--shadow:0 8px 30px rgba(0,0,0,.25);--radius:14px;--brand:#2fd98d}
+        *{box-sizing:border-box}
+        body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+        a{color:inherit;text-decoration:none}
+        .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#0b0f10;border-bottom:1px solid var(--line)}
+        .brand{font-weight:700}
+        .nav{display:flex;gap:8px}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#0f1315;color:var(--text);cursor:pointer}
+        .btn:hover{border-color:#2a3640}
+        .container{max-width:1100px;margin:24px auto;padding:0 16px}
+        .section{margin-bottom:36px}
+        .page-title{font-size:28px;margin:0 0 12px}
+        .filters{display:flex;gap:8px;margin:12px 0 20px;padding:0;list-style:none}
+        .chip{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:var(--text);background:var(--bg);cursor:pointer;user-select:none}
+        .chip.on{background:#0b0f10}
+        .chip:hover{border-color:#2a3640}
+        .count{font-size:.85rem;color:var(--muted)}
+        .map-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px}
+        .map-wrap{height:calc(100vh - 220px);min-height:520px;border-radius:12px;overflow:hidden}
+        .leaflet-container{border-radius:12px;box-shadow:var(--shadow)}
+        .dot span{display:block;width:14px;height:14px;border-radius:50%;border:2px solid var(--c, #2fd98d);background:rgba(0,0,0,.45);box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+        .legend{background:#0b0f10cc;color:var(--text);padding:10px 12px;border:1px solid var(--line);border-radius:10px;backdrop-filter:blur(4px)}
+        .legend-row{display:flex;align-items:center;gap:8px;margin:4px 0}
+        .legend-dot{width:10px;height:10px;border-radius:50%;border:2px solid currentColor;display:inline-block}
+        .footer{display:flex;justify-content:center;align-items:center;padding:24px;color:var(--muted);border-top:1px solid var(--line);margin-top:36px}
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <a th:href="@{/}" class="brand">MotoTracker</a>
+    <nav class="nav">
+        <a class="btn" th:href="@{/motos}">Motos</a>
+        <a class="btn" th:href="@{/mapa}">Mapa</a>
+        <a class="btn" th:href="@{/patio}">Pátio</a>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="section">
+        <h1 class="page-title">Mapa de Motos</h1>
+
+        <ul id="statusChips" class="filters">
+            <li data-key="ativa" class="chip on">Ativa <span class="count" data-count="ativa">0</span></li>
+            <li data-key="manut" class="chip on">Manutenção <span class="count" data-count="manut">0</span></li>
+            <li data-key="off"   class="chip on">Desativada <span class="count" data-count="off">0</span></li>
+        </ul>
+
+        <div class="map-card">
+            <div id="map" class="map-wrap"></div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">© 2025 MotoTracker</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    window.MOTOS_DATA = /*[[${motos}]]*/ [];
+    /*]]>*/
+</script>
+
+<script>
+    const COLORS = { ativa:'#2fd98d', manut:'#f5a524', off:'#889096' };
+
+    function metersToDeg(lat, dxMeters, dyMeters) {
+        const latRad = (lat * Math.PI) / 180;
+        const dLat = dyMeters / 111320;
+        const dLng = dxMeters / (111320 * Math.cos(latRad));
+        return [dLat, dLng];
+    }
+
+    function spreadOverlaps(points, stepMeters = 18) {
+        const groups = new Map();
+        for (const p of points) {
+            const key = `${(+p.lat).toFixed(5)},${(+p.lng).toFixed(5)}`;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(p);
+        }
+        const out = [];
+        const PHI = 137.508 * Math.PI / 180;
+        for (const arr of groups.values()) {
+            const baseLat = +arr[0].lat;
+            const baseLng = +arr[0].lng;
+            arr.forEach((p, i) => {
+                if (arr.length === 1 || i === 0) {
+                    out.push({...p, lat: baseLat, lng: baseLng});
+                    return;
+                }
+                const r = stepMeters * Math.sqrt(i);
+                const ang = i * PHI;
+                const dx = r * Math.cos(ang);
+                const dy = r * Math.sin(ang);
+                const [dLat, dLng] = metersToDeg(baseLat, dx, dy);
+                out.push({...p, lat: baseLat + dLat, lng: baseLng + dLng});
+            });
+        }
+        return out;
+    }
+
+    function dot(color){
+        return L.divIcon({
+            className:'dot',
+            html:`<span style="--c:${color}"></span>`,
+            iconSize:[16,16],
+            iconAnchor:[8,8]
+        });
+    }
+
+    const map = L.map('map',{ zoomControl:true });
+
+    L.tileLayer(
+        'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+        { maxZoom:20, attribution:'&copy; OpenMapTiles & OpenStreetMap' }
+    ).addTo(map);
+
+    /* ========= ADAPTADOR (sem misturar ?? e ||) ========= */
+    const raw = Array.isArray(window.MOTOS_DATA) ? window.MOTOS_DATA : [];
+
+    const motosAdaptadas = raw
+        .map(m => {
+            // latitude / longitude aceitando múltiplas chaves
+            const latRaw = (m.lat !== undefined ? m.lat :
+                (m.latitude !== undefined ? m.latitude :
+                    (m.Latitude !== undefined ? m.Latitude : null)));
+            const lngRaw = (m.lng !== undefined ? m.lng :
+                (m.longitude !== undefined ? m.longitude :
+                    (m.Longitude !== undefined ? m.Longitude : null)));
+
+            if (latRaw == null || lngRaw == null) return null;
+
+            const lat = Number(latRaw);
+            const lng = Number(lngRaw);
+            if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
+
+            const s = String(m.status || '').trim().toUpperCase();
+            const status = (s === 'ATIVA') ? 'ativa' : (s === 'MANUTENCAO') ? 'manut' : 'off';
+
+            const base = [m.placa, m.modelo].filter(Boolean).join(' · ');
+            const nome = (m.nome != null && m.nome !== '') ? m.nome : (base || (`Moto ${m.id ?? ''}`));
+
+            return { id: m.id, nome, status, lat, lng };
+        })
+        .filter(Boolean);
+
+    const motos = spreadOverlaps(motosAdaptadas, 18);
+    const layers = { ativa:L.layerGroup(), manut:L.layerGroup(), off:L.layerGroup() };
+
+    motos.forEach(m => {
+        const marker = L.marker([m.lat, m.lng], {
+            icon: dot(COLORS[m.status]),
+            title: `${m.nome ?? ''} · ${m.status}`
+        });
+        marker.bindPopup(`
+      <div style="min-width:200px">
+        <div style="font-weight:600;margin-bottom:2px">${m.nome ?? ''}</div>
+        <div style="opacity:.8">Status: ${labelStatus(m.status)}</div>
+        <div style="opacity:.8">Lat/Lng: ${Number(m.lat).toFixed(5)}, ${Number(m.lng).toFixed(5)}</div>
+      </div>
+    `);
+        layers[m.status].addLayer(marker);
+    });
+
+    layers.ativa.addTo(map);
+    layers.manut.addTo(map);
+    layers.off.addTo(map);
+
+    fitToVisible();
+
+    const legend = L.control({ position:'bottomleft' });
+    legend.onAdd = function(){
+        const el = L.DomUtil.create('div','legend');
+        el.innerHTML = `
+      <div class="legend-row" style="color:${COLORS.ativa}"><span class="legend-dot"></span> Ativa</div>
+      <div class="legend-row" style="color:${COLORS.manut}"><span class="legend-dot"></span> Manutenção</div>
+      <div class="legend-row" style="color:${COLORS.off}"><span class="legend-dot"></span> Desativada</div>
+    `;
+        return el;
+    };
+    legend.addTo(map);
+
+    document.getElementById('statusChips').addEventListener('click', (e) => {
+        const li = e.target.closest('.chip');
+        if(!li) return;
+        const key = li.getAttribute('data-key');
+        const turnedOn = li.classList.toggle('on');
+        if(turnedOn) layers[key].addTo(map); else map.removeLayer(layers[key]);
+        updateCounts();
+        fitToVisible();
+    });
+
+    updateCounts();
+
+    function labelStatus(code){
+        if(code==='ativa') return 'Ativa';
+        if(code==='manut') return 'Manutenção';
+        return 'Desativada';
+    }
+
+    function updateCounts(){
+        ['ativa','manut','off'].forEach(k => {
+            const el = document.querySelector(`[data-count="${k}"]`);
+            if(!el) return;
+            const isOn = document.querySelector(`.chip[data-key="${k}"]`).classList.contains('on');
+            const visible = isOn ? layers[k].getLayers().length : 0;
+            el.textContent = visible;
+        });
+    }
+
+    function fitToVisible(){
+        const visibleMarkers = Object.values(layers).filter(layer => map.hasLayer(layer)).flatMap(layer => layer.getLayers());
+        if(visibleMarkers.length){
+            const group = L.featureGroup(visibleMarkers);
+            map.fitBounds(group.getBounds(), { padding:[24,24] });
+        } else {
+            map.setView([-23.55052, -46.63331], 16); // fallback: Praça da Sé
+        }
+    }
+</script>
+</body>
+</html>

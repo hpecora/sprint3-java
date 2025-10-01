@@ -1,41 +1,68 @@
+// src/main/java/com/mottu/mototracker/controller/MotoController.java
 package com.mottu.mototracker.controller;
 
-import com.mottu.mototracker.model.Moto;
+import com.mottu.mototracker.DTO.MotoDTO;
 import com.mottu.mototracker.service.MotoService;
-import jakarta.validation.Valid;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/motos")
+@Controller
+@RequestMapping("/motos")
 public class MotoController {
 
-    private final MotoService service;
+    private final MotoService motoService;
 
-    public MotoController(MotoService service) {
-        this.service = service;
+    public MotoController(MotoService motoService) {
+        this.motoService = motoService;
     }
 
+    // <<< ADICIONE ESTE HANDLER >>>
     @GetMapping
-    public List<Moto> listar() {
-        return service.listar();
+    public String list(Model model){
+        model.addAttribute("motos", motoService.findAllDtos());
+        return "motos/list"; // templates/motos/list.html
+    }
+
+    @GetMapping("/new")
+    public String newForm(Model model){
+        model.addAttribute("moto", new MotoDTO());
+        return "motos/new";
     }
 
     @PostMapping
-    public Moto cadastrar(@RequestBody @Valid Moto moto) {
-        return service.salvar(moto);
+    public String create(@ModelAttribute("moto") MotoDTO dto){
+        motoService.create(dto);
+        return "redirect:/motos";
     }
 
-    @PutMapping("/{id}")
-    public Moto atualizar(@PathVariable Long id, @RequestBody @Valid Moto moto) {
-        Moto motoExistente = service.buscarPorId(id);
-        moto.setId(motoExistente.getId());
-        return service.salvar(moto);
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model){
+        model.addAttribute("moto", motoService.findDtoById(id));
+        return "motos/edit";
     }
 
-    @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
-        service.deletar(id);
+    @PostMapping("/{id}")
+    public String update(@PathVariable Long id, @ModelAttribute("moto") MotoDTO dto){
+        motoService.update(id, dto);
+        return "redirect:/motos";
+    }
+
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id){
+        motoService.delete(id);
+        return "redirect:/motos";
+    }
+
+    @PostMapping("/{id}/patio")
+    public String enviarParaPatio(@PathVariable Long id){
+        motoService.enviarParaPatio(id);
+        return "redirect:/motos";
+    }
+
+    @PostMapping("/{id}/ativar")
+    public String ativar(@PathVariable Long id){
+        motoService.ativar(id);
+        return "redirect:/patio";
     }
 }

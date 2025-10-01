@@ -1,5 +1,6 @@
 package com.mottu.mototracker.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -20,6 +21,9 @@ public class Moto {
 
     @NotBlank
     private String modelo;
+
+    @NotBlank
+    private String status;
 
     @OneToMany(mappedBy = "moto", cascade = CascadeType.ALL)
     private List<Localizacao> localizacoes;

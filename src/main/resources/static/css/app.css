@@ -1,0 +1,39 @@
+/* ========= MAPA ========= */
+.page-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:8px 0 16px; }
+.page-title { margin:0; }
+.actions { display:flex; gap:8px; }
+
+.card { background:#0b0f10; border:1px solid #1d262b; border-radius:12px; padding:12px; }
+
+.filters { display:flex; gap:12px; align-items:center; margin:8px 0 12px; flex-wrap:wrap; }
+.filters label { display:flex; align-items:center; gap:6px; color:#c9d5da; font-size:14px; }
+.filters .muted { color:#8aa1aa; font-size:13px; }
+
+#map { width:100%; height:72vh; border-radius:12px; overflow:hidden; }
+
+/* Leaflet refinamentos no tema escuro */
+.leaflet-container { background:#0f1315; }
+.leaflet-control-zoom a { background:#172025; color:#eaeef0; border:none; }
+.leaflet-control-zoom a:hover { background:#1b252a; }
+.leaflet-control-attribution { background:transparent; color:#8aa1aa; }
+
+/* Ícones em div (ponto colorido) */
+.leaflet-div-icon { background:transparent; border:none; }
+.dot { width:18px; height:18px; border-radius:50%; border:2px solid #0b0f10; box-shadow:0 0 0 2px rgba(0,0,0,.25); }
+
+/* Popup */
+.leaflet-popup-content-wrapper { background:#0b0f10; color:#eaeef0; border:1px solid #1d262b; }
+.leaflet-popup-tip { background:#0b0f10; }
+.popup-actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+
+/* Badges (já existem; garantindo) */
+.badge{display:inline-block;padding:.25rem .5rem;border-radius:999px;font-size:.75rem;border:1px solid #26343a}
+.badge--success{background:#0e3020;border-color:#1d5c3a;color:#5de39e}
+.badge--warning{background:#2b2614;border-color:#5c4a1d;color:#e6d58a}
+.badge--muted{background:#1a2226;border-color:#2a383f;color:#a9bbc2}
+
+/* Responsivo */
+@media (max-width: 768px){
+    #map { height: 60vh; }
+    .actions { width:100%; justify-content:flex-start; flex-wrap:wrap; }
+}

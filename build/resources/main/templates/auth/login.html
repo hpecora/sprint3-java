@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-br">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Entrar</title>
+    <style>
+        :root{--brand:#10c86e;--bg:#0f1115;--card:#151922;--line:#222836;--text:#f4f6f8;--muted:#a5adbb;--shadow:0 8px 30px rgba(0,0,0,.25);--radius:14px}
+        *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+        .wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
+        .card{width:min(440px,96%);background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+        h1{margin:0 0 8px} .muted{color:var(--muted);margin:0 0 16px}
+        .form__row{display:grid;gap:6px;margin-bottom:14px}
+        .input{width:100%;border:1px solid var(--line);background:#0e121a;color:var(--text);border-radius:10px;padding:10px 12px}
+        .btn{--bg:#1b2230;--fg:var(--text);--bd:var(--line);display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid var(--bd);background:var(--bg);color:var(--fg);cursor:pointer;text-decoration:none;width:100%}
+        .btn--primary{--bg:var(--brand);--bd:transparent;--fg:#0a0f14;font-weight:600}
+        .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+        .error{background:#3a1d1f;border:1px solid #6e2a30;color:#ffb9b9;padding:8px 10px;border-radius:10px;margin-bottom:10px}
+        .ok{background:#163322;border:1px solid #296a45;color:#a4f0c8;padding:8px 10px;border-radius:10px;margin-bottom:10px}
+        a{color:var(--brand);text-decoration:none}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <form class="card" th:action="@{/login}" method="post">
+        <h1>Entrar</h1>
+        <p class="muted">Acesse com seu usuário e senha.</p>
+
+        <div th:if="${param.error}" class="error">Usuário ou senha inválidos.</div>
+        <div th:if="${param.logout}" class="ok">Você saiu da sessão.</div>
+        <div th:if="${param.registered}" class="ok">Cadastro realizado! Faça login.</div>
+
+        <div class="form__row">
+            <label>Usuário</label>
+            <input class="input" type="text" name="username" required autofocus/>
+        </div>
+        <div class="form__row">
+            <label>Senha</label>
+            <input class="input" type="password" name="password" required/>
+        </div>
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button class="btn btn--primary" type="submit">Entrar</button>
+
+        <div class="row">
+            <span class="muted">Não tem conta?</span>
+            <a th:href="@{/register}">Cadastre-se</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

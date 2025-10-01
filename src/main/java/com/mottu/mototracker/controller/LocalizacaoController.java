@@ -1,14 +1,12 @@
+// src/main/java/com/mottu/mototracker/controller/LocalizacaoController.java
 package com.mottu.mototracker.controller;
 
-import com.mottu.mototracker.model.Localizacao;
 import com.mottu.mototracker.service.LocalizacaoService;
-import jakarta.validation.Valid;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/localizacoes")
+@Controller
+@RequestMapping("/motos/{id}/localizacoes")
 public class LocalizacaoController {
 
     private final LocalizacaoService service;
@@ -17,25 +15,12 @@ public class LocalizacaoController {
         this.service = service;
     }
 
-    @GetMapping
-    public List<Localizacao> listar() {
-        return service.listar();
-    }
-
+    // Ex.: POST /motos/5/localizacoes?lat=-23.56&lng=-46.64
     @PostMapping
-    public Localizacao cadastrar(@RequestBody @Valid Localizacao localizacao) {
-        return service.salvar(localizacao);
-    }
-
-    @PutMapping("/{id}")
-    public Localizacao atualizar(@PathVariable Long id, @RequestBody @Valid Localizacao localizacao) {
-        Localizacao localizacaoExistente = service.buscarPorId(id);
-        localizacao.setId(localizacaoExistente.getId());
-        return service.salvar(localizacao);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
-        service.deletar(id);
+    public String criar(@PathVariable Long id,
+                        @RequestParam double lat,
+                        @RequestParam double lng) {
+        service.registrar(id, lat, lng);
+        return "redirect:/mapa";
     }
 }

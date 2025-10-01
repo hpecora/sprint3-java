@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Início · MotoTracker</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <style>
+        .app--dark{background:#0f1315;color:#eaeef0}
+        .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#0b0f10;border-bottom:1px solid #1d262b}
+        .brand{font-weight:700;text-decoration:none;color:#eaeef0}
+        .container{max-width:1100px;margin:24px auto;padding:0 16px}
+        .page-title{margin:0 0 16px}
+        .row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+        .card{background:#0b0f10;border:1px solid #1d262b;border-radius:12px;padding:16px}
+        .stat{font-size:28px;font-weight:700}
+        .muted{color:#9fb0b7}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid #2a383f;background:transparent;color:#eaeef0;text-decoration:none}
+        .btn:hover{background:#12191c}
+        .btn--primary{background:#22c55e;border-color:#22c55e;color:#092414}
+        .btn--primary:hover{background:#19ad51;border-color:#19ad51}
+    </style>
+</head>
+<body class="app app--dark">
+<header class="topbar">
+    <div class="topbar__left"><a class="brand" th:href="@{/}">MotoTracker</a></div>
+    <div class="topbar__right" style="display:flex;gap:8px">
+        <a class="btn" th:href="@{/mapa}">Mapa</a>
+        <a class="btn" th:href="@{/patio}">Pátio</a>
+        <a class="btn btn--primary" th:href="@{/motos}">Motos</a>
+    </div>
+</header>
+
+<main class="container">
+    <h1 class="page-title">Bem-vindo a MottuTracker</h1>
+
+    <div class="row" style="margin-bottom:16px">
+        <div class="card">
+            <div class="muted">Ativas</div>
+            <div class="stat" th:text="${qtdAtivas}">0</div>
+        </div>
+        <div class="card">
+            <div class="muted">Manutenção</div>
+            <div class="stat" th:text="${qtdManutencao}">0</div>
+        </div>
+        <div class="card">
+            <div class="muted">Desativadas</div>
+            <div class="stat" th:text="${qtdDesativadas}">0</div>
+        </div>
+    </div>
+
+    <div class="card" style="display:flex;gap:12px;flex-wrap:wrap">
+        <a class="btn btn--primary" th:href="@{/motos}">Ir para Motos</a>
+        <a class="btn" th:href="@{/patio}">Ver Pátio</a>
+        <a class="btn" th:href="@{/mapa}">Abrir Mapa</a>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="'Moto ' + ${moto.placa}">Moto</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <style>
+        body{background:#0f1315;color:#eaeef0;margin:0}
+        .topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#0b0f10;border-bottom:1px solid #1d262b}
+        .brand{font-weight:700;text-decoration:none;color:#eaeef0}
+        .container{max-width:1100px;margin:24px auto;padding:0 16px}
+        .card{background:#0b0f10;border:1px solid #1d262b;border-radius:12px;padding:12px;margin-bottom:16px}
+        .row{display:flex;gap:16px;flex-wrap:wrap}
+        .col{flex:1 1 360px}
+        .table{width:100%;border-collapse:collapse}
+        .table th,.table td{padding:10px;border-bottom:1px solid #1d262b}
+        .badge{display:inline-block;padding:.25rem .5rem;border-radius:999px;font-size:.75rem;border:1px solid #26343a}
+        .badge--success{background:#0e3020;border-color:#1d5c3a;color:#5de39e}
+        .badge--warning{background:#2b2614;border-color:#5c4a1d;color:#e6d58a}
+        .badge--muted{background:#1a2226;border-color:#2a383f;color:#a9bbc2}
+        #miniMap{width:100%;height:300px;border-radius:12px;border:1px solid #1d262b}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid #2a383f;background:transparent;color:#eaeef0;text-decoration:none}
+        .btn:hover{background:#12191c}
+    </style>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/}">MotoTracker</a>
+    <div style="display:flex;gap:8px">
+        <a class="btn" th:href="@{/motos}">Voltar</a>
+        <a class="btn" th:href="@{/mapa}">Mapa</a>
+    </div>
+</header>
+
+<main class="container">
+    <div class="card">
+        <h2 th:text="${moto.placa}">ABC1D23</h2>
+        <div class="row">
+            <div class="col">
+                <p><strong>Modelo:</strong> <span th:text="${moto.modelo}">CG 160</span></p>
+                <p>
+                    <strong>Status:</strong>
+                    <span th:text="${moto.status}"
+                          th:class="'badge ' + (${moto.status}=='ATIVA' ? 'badge--success' : (${moto.status}=='MANUTENCAO' ? 'badge--warning' : 'badge--muted'))">
+            ATIVA
+          </span>
+                </p>
+                <a class="btn" th:href="@{/motos/{id}/edit(id=${moto.id})}">Editar</a>
+            </div>
+            <div class="col">
+                <div id="miniMap"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Histórico de Localizações</h3>
+        <div style="overflow:auto">
+            <table class="table">
+                <thead>
+                <tr><th>Data/Hora</th><th>Latitude</th><th>Longitude</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="l : ${historico}">
+                    <td th:text="${#temporals.format(l.dataHora, 'dd/MM/yyyy HH:mm:ss')}">--</td>
+                    <td th:text="${l.latitude}">-23.55</td>
+                    <td th:text="${l.longitude}">-46.63</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(historico)}">
+                    <td colspan="3" style="color:#9fb0b7">Sem localizações registradas.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    (function(){
+        const points = /*[[${historico}]]*/ [];
+        const coords = points
+            .map(p=>[Number(p.latitude), Number(p.longitude)])
+            .filter(([a,b])=>Number.isFinite(a)&&Number.isFinite(b));
+
+        const map = L.map('miniMap');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+
+        if (coords.length){
+            const poly = L.polyline(coords, {weight:3}).addTo(map);
+            L.marker(coords[0]).addTo(map).bindPopup('Primeiro registro');
+            L.marker(coords[coords.length-1]).addTo(map).bindPopup('Último registro');
+            map.fitBounds(poly.getBounds().pad(0.2));
+        } else {
+            map.setView([-23.55,-46.63], 12);
+        }
+    })();
+</script>
+</body>
+</html>

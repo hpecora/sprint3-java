@@ -1,5 +1,6 @@
 package com.mottu.mototracker.service;
 
+import com.mottu.mototracker.DTO.LocalizacaoDTO;
 import com.mottu.mototracker.model.Localizacao;
 import com.mottu.mototracker.repository.LocalizacaoRepository;
 import org.springframework.stereotype.Service;
@@ -9,25 +10,30 @@ import java.util.List;
 @Service
 public class LocalizacaoService {
 
-    private final LocalizacaoRepository repository;
+    private final LocalizacaoRepository repo;
 
-    public LocalizacaoService(LocalizacaoRepository repository) {
-        this.repository = repository;
+    public LocalizacaoService(LocalizacaoRepository repo) {
+        this.repo = repo;
     }
 
-    public List<Localizacao> listar() {
-        return repository.findAll();
+    /** Última localização de cada moto */
+    public List<Localizacao> listarUltimasPorMoto() {
+        return repo.findUltimasPorMoto();
     }
 
-    public Localizacao salvar(Localizacao localizacao) {
-        return repository.save(localizacao);
+    /** Todas as localizações de uma moto (mais recentes primeiro) – ENTIDADE */
+    public List<Localizacao> listarPorMoto(Long motoId) {
+        return repo.findByMotoIdOrderByDataHoraDesc(motoId);
     }
 
-    public Localizacao buscarPorId(Long id) {
-        return repository.findById(id).orElseThrow(() -> new RuntimeException("Localizacao não encontrada"));
+    /** Todas as localizações de uma moto (mais recentes primeiro) – DTO */
+    public List<LocalizacaoDTO> historicoLocalizacoes(Long motoId) {
+        return repo.findByMotoIdOrderByDataHoraDesc(motoId)
+                .stream()
+                .map(LocalizacaoDTO::from)   // precisa existir LocalizacaoDTO.from(Localizacao)
+                .toList();
     }
 
-    public void deletar(Long id) {
-        repository.deleteById(id);
+    public void registrar(Long id, double lat, double lng) {
     }
 }
